@@ -23,8 +23,8 @@ function GenerateVoxel(n, address, radius)
             start_n = node[strut[j][1],:][1]
             end_n = node[strut[j][2],:][1]
             center = voxel_c[i,4:6]
-            alpha = acosd( (center - start_n)'*(end_n - start_n) / (norm(center - start_n)*norm(end_n - start_n)))
-            beta = acosd( (center - end_n)'*(start_n - end_n) / (norm(center - end_n)*norm(start_n - end_n)))
+            alpha = acosd( round((end_n - start_n)'*(center - start_n) / (norm(center - start_n)*norm(end_n - start_n)), digits=5) )
+            beta = acosd( round((start_n - end_n)'*(center - end_n) / (norm(center - end_n)*norm(start_n - end_n)), digits=5) )
             if alpha<90 && beta<90
                 distance = norm(cross(end_n - start_n,center - start_n)) / norm(end_n - start_n)
             else
