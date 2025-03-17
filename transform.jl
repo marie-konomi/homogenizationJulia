@@ -1,3 +1,4 @@
+using Distributed
 using LinearAlgebra
 
 function transform(itr, tmx)

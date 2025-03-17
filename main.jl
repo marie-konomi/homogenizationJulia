@@ -1,12 +1,21 @@
-module homo3D
-    include("GenerateVoxel.jl")
-    include("homo3D.jl")
-    include("transform.jl")
-    include("visual.jl")
-end
+using Distributed
+Distributed.addprocs(6)
 
-using .homo3D
+@everywhere include("GenerateVoxel.jl")
+@everywhere include("homo3D.jl")
+@everywhere include("transform.jl")
 
-voxel, Density = homo3D.Voxel.GenerateVoxel(40,"topology/grid.txt",0.1)
-CH = homo3D.Solver.homo3D(1,1,1,115.4,79.6,voxel);
-print(Density, CH)
+@everywhere using .Voxel
+@everywhere using .Solver
+
+voxel, Density = Voxel.GenerateVoxel(40,"./topology/x_cross_grid.txt",0.1)
+
+E = 0.75e9;
+v = 0.3;
+
+lambda = v*E/((1+v) * (1-2*v));
+mu = E/2*(1+v);
+
+@time CH = Solver.homo3D(3,3,3,lambda,mu,voxel);
+print(Density)
+display(CH)

@@ -3,6 +3,8 @@ export homo3D
 using LinearAlgebra
 using SparseArrays
 using IterativeSolvers
+using Distributed
+
 function homo3D(lx,ly,lz,lambda,mu,voxel)
     nelx, nely, nelz = size(voxel)
     dx = lx/nelx; dy = ly/nely; dz = lz/nelz
@@ -45,8 +47,8 @@ function homo3D(lx,ly,lz,lambda,mu,voxel)
     
     #if you want efficient convergence, you needs incomplete Cholesky factorization
 
-    for i = 1:6
-        X[Int.(activedofs)[4:end],i] = cg(K[Int.(activedofs)[4:end],Int.(activedofs)[4:end]],F[Int.(activedofs)[4:end],i], abstol=1e-10, maxiter=300)
+    @sync @distributed for i = 1:6
+        X[Int.(activedofs)[4:end],i] = cg(K[Int.(activedofs)[4:end],Int.(activedofs)[4:end]], F[Int.(activedofs)[4:end],i], abstol=1e-4, maxiter=300)
     end
     
     X0 = zeros(nel, 24, 6)
@@ -60,7 +62,7 @@ function homo3D(lx,ly,lz,lambda,mu,voxel)
     CH = zeros(6,6)
     volume = lx*ly*lz
     for i = 1:6
-        for j = 1:6
+        @sync @distributed for j = 1:6
             sum_L = ((X0[:,:,i] .- X[Int.(edof .+ (i-1)*ndof)])*keLambda) .* (X0[:,:,j] .- X[Int.(edof .+ (j-1)*ndof)])
             sum_M = ((X0[:,:,i] .- X[Int.(edof .+ (i-1)*ndof)])*keMu) .* (X0[:,:,j] .- X[Int.(edof .+ (j-1)*ndof)])
             sum_L = reshape(sum(sum_L, dims=2), nelx, nely, nelz)
